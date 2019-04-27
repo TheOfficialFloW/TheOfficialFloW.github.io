@@ -136,14 +136,14 @@ If we corrupt the former object, we can gain an arbitrary write primitive, and i
 
 As we are targeting *VirtualBox* v5.2.22, it is not vulnerable to [CVE-2018-3055](<https://www.zerodayinitiative.com/advisories/ZDI-18-684/>) which got patched in v5.2.20. This vulnerability was exploited to leak a  `CRConnection` address, as you can see [here](<https://github.com/niklasb/3dpwn/blob/master/CVE-2018-3055%2B3085/exploit.py#L24>).  So what? Should we use a new infoleak for the sake of the challenge? Or redesign the exploitation strategy?
 
-Surprisingly, the code mentioned above was still able to leak our desired object even in v5.2.22! How is it possible? Was it not fixed properly? If we take a close, we see that the allocated object has a size of 0x290 bytes, whereas the offset to the connection is at `OFFSET_CONN_CLIENT`, which is 0x248. That's not really out-of-bounds!
+Surprisingly, the code mentioned above was still able to leak our desired object even in v5.2.22! How is it possible? Was it not fixed properly? If we take a close look, we see that the allocated object has a size of 0x290 bytes, whereas the offset to the connection is at `OFFSET_CONN_CLIENT`, which is 0x248. That's not really out-of-bounds!
 
 ```python
 msg = make_oob_read(OFFSET_CONN_CLIENT)
 leak = crmsg(client, msg, 0x290)[16:24]
 ```
 
-Interestingly, this worked due to an uninitialized memory bug. Namely, the method `svcGetBuffer()` was requesting heap memory to store the message from guest. However, it didn't clear the buffer. Hence, any API, that was returning back data of the message buffer, could be abused to leak valuable information of the heap to the guest. I assumed that Niklas knew about this bug, hence I decided to use it to solve the challenge. Indeed, a few weeks after the competition, a patch to this bug was pushed and was assigned [CVE-2019-2446](<https://www.zerodayinitiative.com/advisories/ZDI-19-046/>).
+Interestingly, this worked due to an uninitialized memory bug. Namely, the method `svcGetBuffer()` was requesting heap memory to store the message from guest. However, it didn't clear the buffer. Hence, any API, that was returning back data of the message buffer, could be abused to leak valuable information of the heap to the guest. I assumed that Niklas knew about this bug, thus I decided to use it to solve the challenge. Indeed, a few weeks after the competition, a patch to this bug was pushed and was assigned [CVE-2019-2446](<https://www.zerodayinitiative.com/advisories/ZDI-19-046/>).
 
 #### Heap spraying
 
