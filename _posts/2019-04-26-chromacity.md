@@ -9,7 +9,7 @@ By the end of December 2018, a CTF took place at *3C35* and I noticed a [tweet](
 
 ## The challenge
 
-The challenge was to target *VirtualBox* v5.2.22 on 64bit *xubuntu* and escape the VM. A hint was included in the challenge which was simply a picture to the documentation of the API `glShaderSource()`. First, I thought that a bug had been artificially injected into this function for the challenge. However, after looking at its implementation in chromium, I realized that I dealing with a real world vulnerability.
+The challenge was to target *VirtualBox* v5.2.22 on 64bit *xubuntu* and escape the VM. A hint was included in the challenge which was simply a picture of the documentation of the API `glShaderSource()`. First, I thought that a bug had been artificially injected into this function for the challenge. However, after looking at its implementation in *chromium*, I realized that I was dealing with a real world vulnerability.
 
 ### The vulnerability
 
@@ -184,7 +184,7 @@ msg = (pack("<III", CR_MESSAGE_OPCODES, 0x41414141, 1)
 crmsg(self.client, msg, spray_len)
 ```
 
-Notice that we send our message with exactly the same size as the one that has just been freed. Due to how the glibc heap works, it will hopefully take up exactly the same location. Moreover, notice that `count = 1`. Recall, that only the last length can be arbitrarily large. Since there is only one element, obviously the first is also the last element.
+Notice that we send our message with exactly the same size as the one that has just been freed. Due to how the glibc heap works, it will hopefully take up exactly the same location. Moreover, notice that `count = 1` and remember that only the last length can be arbitrarily large. Since there is only one element, obviously the first is also the last element.
 
 Finally, let `pLocalLength[0] = 0x22`. This is small enough to only corrupt the ID and size fields (we don't want to corrupt `pData`).
 
@@ -249,7 +249,7 @@ Note that `spray_len + 0x10` represents the offset (again we skip 0x10 bytes of 
 
 #### Arbitrary read primitive
 
-When issuing a `SHCRGL_GUEST_FN_READ` command, the data from `pHostBuffer` will be sent back to guest. Using our custom 0x13371337 ID at offset `OFFSET_CONN_HOSTBUF` and `OFFSET_CONN_HOSTBUFSZ`, we can overwrite this pointer and its corresponding size with custom ones. Then, we send the `SHCRGL_GUEST_FN_READ` message using the `self.client2` client to trigger our arbitrary read (this is the client ID of the leaked `CRConnection`):
+When issuing a `SHCRGL_GUEST_FN_READ` command, the data from `pHostBuffer` will be sent back to guest. Using our custom 0x13371337 ID, we can overwrite this pointer and its corresponding size with custom ones. Then, we send the `SHCRGL_GUEST_FN_READ` message using the `self.client2` client to trigger our arbitrary read (this is the client ID of the leaked `CRConnection`):
 
 ```python
 hgcm_call(self.client, SHCRGL_GUEST_FN_WRITE_BUFFER, [0x13371337, 0x290, OFFSET_CONN_HOSTBUF,   pack("<Q", where)])
@@ -295,7 +295,7 @@ print("[+] system: 0x%x" % self.system)
 
 At this point, we are only one step away from capturing the flag. The flag is stored in a text file at `~/Desktop/flag.txt`. We can see its content by opening the file with any text editor or terminal. During the challenge, you could literally "see" the flag, as a short video was transmitted back to you after submitting the code. *xubuntu* doesn't have *geedit* preinstalled, however a quick google search yield that it should have the text editor *mousepad*.
 
-A little problem that occurred during the first submission is that it crashed the system. I quickly realized that we cannot use a string longer than 16 bytes or so, since some pointer is located at this offset. Overwriting it with invalid content would result in a segmentation fault. Therefore, I did a dirty trick and shortened the file path twice, such that it could be opened with less characters:
+A little problem that occurred during the first submission is that it crashed the system. I quickly realized that we could not use a string longer than 16 bytes or so, since some pointer is located at this offset. Overwriting it with invalid content would result in a segmentation fault. Therefore, I did a dirty trick and shortened the file path twice, such that it could be opened with less characters:
 
 ```python
 p.rip(p.system, "mv Desktop a\0")
@@ -310,7 +310,7 @@ Hurray, after 4-5h I was able to read the flag and was very excited to be the fi
 ## Conclusions
 
 This challenge was not really hard to solve if you had previously been working with it. As far as I know, this challenge could have been solved without any infoleak by setting up a better heap constellation where we could directly overflow into a `CRConnection` object and modify the `cbHostBuffer` field and finally enable an out-of-bounds read primitive. However under stress and excitement, I was not working very efficiently, and also because of laziness, I decided to use an additional bug to solve the challenge.
-Nevertheless, it was a lot of fun, since while there are a bunch of infoleaks in chromium (nearly every opcode could disclose stack or heap information), memory corruption bugs are more scarce, thus I was excited to exploit this one.
+Nevertheless, it was a lot of fun, because while there are a bunch of infoleaks in *chromium* (nearly every opcode could disclose stack or heap information), memory corruption bugs are more scarce, thus I was excited to exploit this one.
 
 Last but not least, I would like to express that it was very easy to identify the issue **after** I knew that there was a bug in that code. I believe that I had also been looking at it, but deemed it to be unexploitable. Therefore, it is important that we look at code with this kind of mindset. If you believe that there exists bugs in any code, you will eventually find them. Hence, don't be discouraged and don't think "other people have also been intensively looking at it, I don't think I'll find anything".
 
