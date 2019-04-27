@@ -307,7 +307,7 @@ p.rip(p.system, "mousepad b\0")
 
 Hurray, after 4-5h I was able to read the flag and was very excited to be the first to solve that challenge (even though it was remotely). Some hours later, the team *Tea Delivers* also succeeded in exploiting this cool bug, congrats to them.
 
-## Conclusions
+## Conclusion
 
 This challenge was not really hard to solve if you had previously been working with it. As far as I know, this challenge could have been solved without any infoleak by setting up a better heap constellation where we could directly overflow into a `CRConnection` object and modify the `cbHostBuffer` field and finally enable an out-of-bounds read primitive. However under stress and excitement, I was not working very efficiently, and also because of laziness, I decided to use an additional bug to solve the challenge.
 Nevertheless, it was a lot of fun, because while there are a bunch of infoleaks in *chromium* (nearly every opcode could disclose stack or heap information), memory corruption bugs are more scarce, thus I was excited to exploit this one.
