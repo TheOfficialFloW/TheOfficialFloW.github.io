@@ -7,9 +7,9 @@ Back in October 2018, I noticed an interesting [blogpost](<https://phoenhex.re/2
 
 By the end of December 2018, a CTF took place at *3C35* and I noticed a [tweet](https://twitter.com/_niklasb/status/1078622130592534528), again by Niklas, who announced that the *VirtualBox* challenge *chromacity* had not yet been solved by anyone. This got me really hyped as I wanted to be the first to capture this flag.
 
-## Table Of Contents
+## Table of Contents
 
-- [Table Of Contents](#table-of-contents)
+- [Table of Contents](#table-of-contents)
 - [The Challenge](#the-challenge)
   * [The Vulnerability](#the-vulnerability)
   * [Exploitation](#exploitation)
@@ -17,12 +17,12 @@ By the end of December 2018, a CTF took place at *3C35* and I noticed a [tweet](
     + [Heap Information Disclosure](#heap-information-disclosure)
     + [Heap Spraying](#heap-spraying)
     + [The First Overflow](#the-first-overflow)
-    + [Finding The Corruption](#finding-the-corruption)
+    + [Finding the Corruption](#finding-the-corruption)
     + [The Second Overflow](#the-second-overflow)
     + [Arbitrary Read Primitive](#arbitrary-read-primitive)
     + [Arbitrary Code Execution](#arbitrary-code-execution)
     + [Finding system()](#finding-system--)
-    + [Capturing The Flag](#capturing-the-flag)
+  * [Capturing the Flag](#capturing-the-flag)
 - [Conclusion](#conclusion)
 - [Credits](#credits)
 
@@ -217,7 +217,7 @@ How is that calculated?
 
 Therefore, we need 0x30-0x28=8 bytes to reach the end of the message, 0x10 bytes to go over the chunk header, and 8 bytes more to overwrite `uiId` and `uiSize`. To compensate the subtraction, we must add 2 bytes more. Overall, this equals to 0x22 bytes.
 
-#### Finding The Corruption
+#### Finding the Corruption
 
 Recall, that the size field is a 32bit unsigned integer and that our chosen size is 0x30 bytes. Hence, this field will hold the value 0x0a0a0a30 after corruption (the three zero bytes have been replaced by the byte 0x0a).
 
@@ -310,7 +310,7 @@ self.system = self.libc + 0x4f440
 print("[+] system: 0x%x" % self.system)
 ```
 
-#### Capturing The Flag
+### Capturing the Flag
 
 At this point, we are only one step away from capturing the flag. The flag is stored in a text file at `~/Desktop/flag.txt`. We can see its content by opening the file with any text editor or terminal. During the challenge, you could literally "see" the flag, as a short video was transmitted back to you after submitting the code. *xubuntu* doesn't have *geedit* preinstalled, however a quick google search yield that it should have the text editor *mousepad*.
 
