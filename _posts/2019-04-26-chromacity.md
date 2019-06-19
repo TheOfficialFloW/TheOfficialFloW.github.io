@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "chromacity: Escaping the VM with newlines"
+title:  "chromacity: Escaping the VM with Newlines"
 ---
 
 Back in October 2018, I noticed an interesting [blogpost](<https://phoenhex.re/2018-07-27/better-slow-than-sorry>) by Niklas Baumstark about the *chromium* component of *VirtualBox* and decided to take a look at it as well. Within two weeks, I found and reported a dozen of bugs with which I could easily achieve a VM Escape. Unfortunately most of them were duplicates.
