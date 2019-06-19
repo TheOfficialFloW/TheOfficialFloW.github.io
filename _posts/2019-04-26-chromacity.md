@@ -20,7 +20,7 @@ By the end of December 2018, a CTF took place at *3C35* and I noticed a [tweet](
     + [Finding The Corruption](#finding-the-corruption)
     + [The Second Overflow](#the-second-overflow)
     + [Arbitrary Read Primitive](#arbitrary-read-primitive)
-    + [Arbitrary code execution](#arbitrary-code-execution)
+    + [Arbitrary Code Execution](#arbitrary-code-execution)
     + [Finding system()](#finding-system--)
     + [Capturing The Flag](#capturing-the-flag)
 - [Conclusion](#conclusion)
@@ -276,7 +276,7 @@ hgcm_call(self.client, SHCRGL_GUEST_FN_WRITE_BUFFER, [0x13371337, 0x290, OFFSET_
 res, sz = hgcm_call(self.client2, SHCRGL_GUEST_FN_READ, ["A"*0x1000, 0x1000])
 ```
 
-#### Arbitrary code execution
+#### Arbitrary Code Execution
 
 Every `CRConnection` object has got function pointers `Alloc()`, `Free()`, etc. to store message buffers of the guest. Furthermore, they take their `CRConnection` object itself as the first argument. This is perfect as it can be be used to kick off a ROP chain for example, or simply call `system()` with arbitrary commands.
 
