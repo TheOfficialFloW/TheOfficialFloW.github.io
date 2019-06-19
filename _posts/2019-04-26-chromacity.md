@@ -7,11 +7,30 @@ Back in October 2018, I noticed an interesting [blogpost](<https://phoenhex.re/2
 
 By the end of December 2018, a CTF took place at *3C35* and I noticed a [tweet](https://twitter.com/_niklasb/status/1078622130592534528), again by Niklas, who announced that the *VirtualBox* challenge *chromacity* had not yet been solved by anyone. This got me really hyped as I wanted to be the first to capture this flag.
 
-## The challenge
+## Table Of Contents
+
+- [Table Of Contents](#table-of-contents)
+- [The Challenge](#the-challenge)
+  * [The Vulnerability](#the-vulnerability)
+  * [Exploitation](#exploitation)
+    + [The strategy](#the-strategy)
+    + [Heap Information Disclosure](#heap-information-disclosure)
+    + [Heap Spraying](#heap-spraying)
+    + [The First Overflow](#the-first-overflow)
+    + [Finding The Corruption](#finding-the-corruption)
+    + [The Second Overflow](#the-second-overflow)
+    + [Arbitrary Read Primitive](#arbitrary-read-primitive)
+    + [Arbitrary code execution](#arbitrary-code-execution)
+    + [Finding system()](#finding-system--)
+    + [Capturing The Flag](#capturing-the-flag)
+- [Conclusion](#conclusion)
+- [Credits](#credits)
+
+## The Challenge
 
 The challenge was to target *VirtualBox* v5.2.22 on 64bit *xubuntu* and escape the VM. A hint was included in the challenge which was simply a picture of the documentation of the API `glShaderSource()`. First, I thought that a bug had been artificially injected into this function for the challenge. However, after looking at its implementation in *chromium*, I realized that I was dealing with a real world vulnerability.
 
-### The vulnerability
+### The Vulnerability
 
 Below is a code excerpt of `src/VBox/HostServices/SharedOpenGL/unpacker/unpack_shaders.c`.
 
@@ -145,7 +164,7 @@ leak = crmsg(client, msg, 0x290)[16:24]
 
 Interestingly, this worked due to an uninitialized memory bug. Namely, the method `svcGetBuffer()` was requesting heap memory to store the message from guest. However, it didn't clear the buffer. Hence, any API, that was returning back data of the message buffer, could be abused to leak valuable information of the heap to the guest. I assumed that Niklas knew about this bug, thus I decided to use it to solve the challenge. Indeed, a few weeks after the competition, a patch to this bug was pushed and was assigned [CVE-2019-2446](<https://www.zerodayinitiative.com/advisories/ZDI-19-046/>).
 
-#### Heap spraying
+#### Heap Spraying
 
 We can spray the heap with `CRVBOXSVCBUFFER_t` using `alloc_buf()` as follows:
 
@@ -167,7 +186,7 @@ hgcm_call(self.client, SHCRGL_GUEST_FN_WRITE_READ_BUFFERED, [bufs[hole_pos], "A"
 
 See the implementation of this command at `src/VBox/HostServices/SharedOpenGL/crserver/crservice.cpp`.
 
-#### The first overflow
+#### The First Overflow
 
 Now that we have carefully set up the constellation of the heap, we are ready to allocate our message buffer and trigger the overflow as follows:
 
@@ -198,7 +217,7 @@ How is that calculated?
 
 Therefore, we need 0x30-0x28=8 bytes to reach the end of the message, 0x10 bytes to go over the chunk header, and 8 bytes more to overwrite `uiId` and `uiSize`. To compensate the subtraction, we must add 2 bytes more. Overall, this equals to 0x22 bytes.
 
-#### Finding the corruption
+#### Finding The Corruption
 
 Recall, that the size field is a 32bit unsigned integer and that our chosen size is 0x30 bytes. Hence, this field will hold the value 0x0a0a0a30 after corruption (the three zero bytes have been replaced by the byte 0x0a).
 
@@ -232,7 +251,7 @@ print("[+] New id: 0x%x" % new_id)
 
 Now we have everything we need to make a second overflow, whose content we can finally control. Our ultimate goal is to overwrite the `pData` field and make it point to the `CRConnection` object that we have previously leaked.
 
-#### The second overflow
+#### The Second Overflow
 
 Using `new_id` and size 0x0a0a0a30, we will now corrupt a second `CRVBOXSVCBUFFER_t`. Similar to the previous overflow, this works because these buffers are adjacent to each other. However, this time we overwrite it with our fake object that has ID 0x13371337, size 0x290 and a pointer to `self.pConn`.
 
@@ -247,7 +266,7 @@ except IOError:
 
 Note that `spray_len + 0x10` represents the offset (again we skip 0x10 bytes of the chunk header). After doing this, we can arbitrarily modify the content of the `CRConnection` object. As explained before, this ultimately enables us an arbitrary read primitive and allows us to call anything we want by replacing the `Free()` function pointer.
 
-#### Arbitrary read primitive
+#### Arbitrary Read Primitive
 
 When issuing a `SHCRGL_GUEST_FN_READ` command, the data from `pHostBuffer` will be sent back to guest. Using our custom 0x13371337 ID, we can overwrite this pointer and its corresponding size with custom ones. Then, we send the `SHCRGL_GUEST_FN_READ` message using the `self.client2` client to trigger our arbitrary read (this is the client ID of the leaked `CRConnection`):
 
@@ -291,7 +310,7 @@ self.system = self.libc + 0x4f440
 print("[+] system: 0x%x" % self.system)
 ```
 
-#### Capturing the flag
+#### Capturing The Flag
 
 At this point, we are only one step away from capturing the flag. The flag is stored in a text file at `~/Desktop/flag.txt`. We can see its content by opening the file with any text editor or terminal. During the challenge, you could literally "see" the flag, as a short video was transmitted back to you after submitting the code. *xubuntu* doesn't have *geedit* preinstalled, however a quick google search yield that it should have the text editor *mousepad*.
 
