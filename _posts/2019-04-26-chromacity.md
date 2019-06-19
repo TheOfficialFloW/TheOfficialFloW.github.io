@@ -13,7 +13,7 @@ By the end of December 2018, a CTF took place at *3C35* and I noticed a [tweet](
 - [The Challenge](#the-challenge)
   * [The Vulnerability](#the-vulnerability)
   * [Exploitation](#exploitation)
-    + [The strategy](#the-strategy)
+    + [The Strategy](#the-strategy)
     + [Heap Information Disclosure](#heap-information-disclosure)
     + [Heap Spraying](#heap-spraying)
     + [The First Overflow](#the-first-overflow)
@@ -139,7 +139,7 @@ Furthermore, we will also make use of the `CRConnection` object, which contains 
 
 If we corrupt the former object, we can gain an arbitrary write primitive, and if we corrupt the latter object, we can gain an arbitrary read primitive and arbitrary code execution.
 
-#### The strategy
+#### The Strategy
 
 1. Leak the pointer of a `CRConnection` object.
 2. Spray the heap with a lot of `CRVBOXSVCBUFFER_t` objects and save their IDs.
