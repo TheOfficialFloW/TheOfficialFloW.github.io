@@ -21,7 +21,7 @@ By the end of December 2018, a CTF took place at *3C35* and I noticed a [tweet](
     + [The Second Overflow](#the-second-overflow)
     + [Arbitrary Read Primitive](#arbitrary-read-primitive)
     + [Arbitrary Code Execution](#arbitrary-code-execution)
-    + [Finding system()](#finding-system--)
+    + [Finding system()](#finding-system)
   * [Capturing the Flag](#capturing-the-flag)
 - [Conclusion](#conclusion)
 - [Credits](#credits)
